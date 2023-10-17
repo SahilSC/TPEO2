@@ -5,11 +5,21 @@
 	<title>Weather Complete</title>
 	<meta charset="UTF-8" />
   <link rel="stylesheet" type="text/css" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=AR+One+Sans&display=swap" rel="stylesheet">
 </head>
 
 <body>
 	<div id='main-container'>
 		<div id='weather-container'>
+			<p id ='curDate'></p>
+			<div id = "img1"></div>
+			<p id='current-weather'></p>
+			<p id='current-humidity'></p>
+			<div id = "card-container">
+
+			</div>
 		</div> 
 	</div>
 	<div id='side-container'>
@@ -23,14 +33,51 @@
 
 <script>
 		// USE YOUR OWN API KEY
-		const apiKey = "";
+		const apiKey = "956d9d0e16ff740d3711c7955f17c403";
 
         // variable that stores the city that is chosen
 		let city;
         // variable that stores the weather and forecast for the city
 		let weather;
         // the variable that stores the air quality index for the city
-		let aqi;
+		let humidity;
+		
+		let tempMin = [];
+		let tempMax = [];
+
+		function formatData() {
+			weatherCall = `https://api.openweathermap.org/data/2.5/forecast?lat=${city.lat}&lon=${city.lon}&appid=${apiKey}&units=imperial`
+			fetch(weatherCall)
+				.then((response) =>
+					response.json()
+				)
+				.then(((data) => {
+					weather = parseFloat(data["list"][0]["main"]["temp_min"]).toFixed(0);
+					humidity = data["list"][0]["main"]["humidity"];
+					date = formatDate(0);
+					
+					document.getElementById("curDate").innerHTML = formatDate(0) + '<p> <h1> Weather for ' + city.name + ', ' + city.state + ' </h1> </p>';
+					document.getElementById("img1").innerHTML = "<img src='icons/" + data["list"][0]["weather"][0]["icon"] + ".svg'>" +
+					'<p>' + data["list"][0]["weather"][0]["description"] + '</p>';
+					document.getElementById("img1").style.width = "200px";
+					document.querySelector('#current-weather').innerHTML = weather + '°F';
+					document.querySelector('#current-humidity').innerHTML = "HUMIDITY: " + humidity;
+					for (i = 0; i < 5; i++) {
+						tempMin.push(parseFloat(data["list"][i]["main"]["temp_min"]).toFixed(0));
+						tempMax.push(parseFloat(data["list"][i]["main"]["temp_max"]).toFixed(0));
+					}
+					const cardContainer = document.getElementById('card-container');
+					for (let i = 1; i <= 5; i++) {
+						const weatherCard = document.createElement('div');
+						weatherCard.className = 'weather-card';
+						weatherCard.innerHTML = `<p>${formatDate(i)}</p>`
+						+ "<img class='icons' src='icons/" + data["list"][i-1]["weather"][0]["icon"] + ".svg'>"
+						+ "<h3>" + `${tempMin[i-1]}°F to ${tempMax[i-1]}°F` + "</h3>";
+						cardContainer.appendChild(weatherCard);
+					}
+				}))
+
+		}
 
 		// function that accepts that a number N and returns the name of the day and the date N days from now as a string
 		function formatDate(daysFromNow = 0) {
@@ -102,6 +149,8 @@
 			//printing the city object to the console
 			console.log(city);
             // BEGIN CODING HERE
+
+			formatData();
 		}
 	</script>
 </html>

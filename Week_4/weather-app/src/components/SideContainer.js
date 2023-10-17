@@ -95,7 +95,8 @@ function SideContainer(props) {
       lat: lat,
       lon: lon,
     };
-    console.log(city);
+    props.updateCity(city)
+    // console.log(city);
   }
 
   return (
