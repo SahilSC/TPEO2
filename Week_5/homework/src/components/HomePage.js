@@ -25,22 +25,29 @@ export default function HomePage() {
   }, [currentUser])
 
   // State to hold the list of tasks.
-  const [tasks, setTasks] = useState([
-    // Sample tasks to start with.
-    { name: "create a todo app", finished: false },
-    { name: "wear a mask", finished: false },
-    { name: "play roblox", finished: false },
-    { name: "be a winner", finished: true },
-    { name: "become a tech bro", finished: true },
-  ]);
+  const [tasks, setTasks] = useState([]);
+  // getTasks("sahil")
+
+
 
   // State for the task name being entered by the user.
   const [taskName, setTaskName] = useState("");
 
   // TODO: Support retrieving your todo list from the API.
   // Currently, the tasks are hardcoded. You'll need to make an API call
-  // to fetch the list of tasks instead of using the hardcoded data.
-
+  // to fetch the list of tasks instead of using the hardcoded data. 
+  //Updates tasks accordingly
+  function getTasks(user) {
+    fetch(`https://tpeo-todo.vercel.app/tasks/${user}`)
+      .then((response) => response.json())
+      .then((data) => {
+        // data = data.filter((item) => item.finished);
+        const mappedData = data.map((item) => {
+          return {id: item.id, name : item.task, finished: item.finished};
+        })
+        setTasks(mappedData);
+      });
+  }
   function addTask() {
     // Check if task name is provided and if it doesn't already exist.
     if (taskName && !tasks.some((task) => task.name === taskName)) {
@@ -48,8 +55,22 @@ export default function HomePage() {
       // TODO: Support adding todo items to your todo list through the API.
       // In addition to updating the state directly, you should send a request
       // to the API to add a new task and then update the state based on the response.
-
-      setTasks([...tasks, { name: taskName, finished: false }]);
+      fetch("https://tpeo-todo.vercel.app/tasks", {
+        method: "POST",
+        headers : {
+          "Content-Type": "application/json",
+          "accept": "application/json",
+        },
+        body: JSON.stringify({
+          "user": "sahil",
+          "task": taskName,
+          "finished": false
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          setTasks([...tasks, { name: taskName, finished: false, id: data.id }]);    
+        });
       setTaskName("");
     } else if (tasks.some((task) => task.name === taskName)) {
       alert("Task already exists!");
@@ -64,11 +85,35 @@ export default function HomePage() {
       )
     );
 
+    //remove all finished tasks
+    tasks.forEach((task) => {
+      if (task.finished) {
+        fetch(`https://tpeo-todo.vercel.app/tasks/${task.id}`, {
+          method: "DELETE",
+          headers : {
+            // "Content-Type": "application/json",
+            "accept": "application/json",
+          },
+        })
+        .then((response) => response.json())
+        .then(() => {
+          const unfinishedTasks = tasks.filter((task) => !task.finished);
+          console.log(unfinishedTasks)
+          setTasks(unfinishedTasks);
+        })
+      }
+    })
+    // get only unfinished tasks
     // TODO: Support removing/checking off todo items in your todo list through the API.
     // Similar to adding tasks, when checking off a task, you should send a request
     // to the API to update the task's status and then update the state based on the response.
+    // const unfinishedTasks = tasks.filter((task) => !task.finished);
+    // console.log(unfinishedTasks)
+    // setTasks(unfinishedTasks);
   }
 
+
+  
   // Function to compute a message indicating how many tasks are unfinished.
   function getSummary() {
     const unfinishedTasks = tasks.filter((task) => !task.finished).length;
