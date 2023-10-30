@@ -9,6 +9,7 @@ const express = require('express');
 // returns an object
 const app = express();
 
+const db = require('./firebase')
 // for env variables
 // run npm install dotenv for dependency
 require('dotenv').config()
@@ -49,12 +50,16 @@ app.get('/', (req, res) => {
 })
 
 // get all tweets
-app.get('/api/tweets', (req, res) => {
+app.get('/api/tweets', async (req, res) => {
+    const doc = await db.collection("tweets").doc("tweets").get();
+    res.send(doc.data())
     res.send(tweets)
 })
 
 // get tweets by user (param in route)
-app.get('/api/tweets/:user', (req, res) => {
+app.get('/api/tweets/:user', async (req, res) => {
+    const doc = await db.collection("tweets").doc("tweets").get();
+    const tweets = doc.data().tweets;
     var target = tweets.find(t => t.user === req.params.user)
     if (!target) {
         res.status(404).send("Tweet not found")
@@ -81,26 +86,38 @@ app.get('/api/tweets/:user', (req, res) => {
 // })
 
 // post a tweet
-app.post('/api/tweets', validateInput, validateTweetLength, (req, res) => {
+
+app.post('/api/tweets', validateInput, validateTweetLength, async (req, res) => {
     var tweet = {
         id: tweets.length + 1,
         user: req.body.user,
         tweet: req.body.tweet
     }
+
+    const tweetsRef = db.collection("tweets").doc("tweets");
+    const snapshot = await tweetsRef.get();
+    const curTweets = snapshot.data().tweets;
     tweets.push(tweet)
+    res.send(tweet)
+    curTweets.update({tweets: curTweets})
+    await tweets.push(tweet)
     res.send(tweet)
 })
 
 // delete a tweet
-app.delete('/api/tweets', (req, res) => {
-    const tweetIndex = tweets.findIndex(tweet => tweet.id === req.body.id);
+app.delete('/api/tweets', async (req, res) => {
+    const tweetsRef = db.collection("tweets").doc("tweets");
+    const snapshot = await tweetsRef.get();
+    const curTweets = snapshot.data().tweets;
+    const tweetIndex = curTweets.findIndex(tweet => tweet.id === req.body.id);
     if (tweetIndex === -1) {
         res.status(404).send("Tweet not found");
       } else {
         // Remove the tweet from the 'tweets' array
         var removed = tweets[tweetIndex]
         console.log(removed)
-        tweets.splice(tweetIndex, 1);
+        curTweets.splice(tweetIndex, 1);
+        await tweetsRef.update();
         res.json(removed);
       }
 })
