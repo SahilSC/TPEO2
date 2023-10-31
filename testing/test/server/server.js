@@ -10,7 +10,7 @@ const app = express();
 require("dotenv").config();
 
 // Importing the Firestore database instance from firebase.js
-const db = require("./firebase");
+const db = require("./firebase.js");
 
 // Middlewares to handle cross-origin requests and to parse the body of incoming requests to JSON
 app.use(cors());
@@ -47,6 +47,15 @@ app.get("/tasks", async (req, res) => {
 
 // POST: Endpoint to add a new task
 // ...
+app.post("/tasks", async (req, res) => {
+    const snapshot = await db.collection("tasks").get();
+    snapshot.push()
+    var task = {
+        task: req.body.task,
+        user: req.body.tweet,
+        finished: false
+    }
+  });
 
 // DELETE: Endpoint to remove a task
 // ...
