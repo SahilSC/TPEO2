@@ -1,4 +1,5 @@
 // Importing Firebase Admin SDK to interact with Firebase services
+
 const admin = require("firebase-admin");
 
 require("dotenv").config();
@@ -23,5 +24,7 @@ admin.initializeApp({
 });
 
 const db = admin.firestore();
-
+// console.log(db)
+// const studentRefs = await db.collection('tasks').get()
+// console.log(studentRefs)
 module.exports = db;
